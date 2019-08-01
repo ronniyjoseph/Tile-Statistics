@@ -12,7 +12,6 @@ statistics = numpy.loadtxt("../broken_tile_count_2017B_PhaseII_Compact.txt")
 statistics = numpy.loadtxt("/home/ronniyjoseph/Downloads/mwa_health.csv", skiprows =1, delimiter = ',' )
 
 dipole_stats = numpy.loadtxt("../broken_dipole_count_2015_PhaseI.txt")[1:]
-fontsize = 15
 #reshape = dipole_stats.reshape(4,4)
 #x = numpy.arange(-2,2,1)
 #xx, yy = numpy.meshgrid(x,x)
