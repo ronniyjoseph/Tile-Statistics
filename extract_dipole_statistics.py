@@ -6,8 +6,8 @@ import numpy
 def main():
     obsids_list = "test_list.txt"
     metafits_folder = '/mnt/data/PPDs'
-    count_broken_tiles_all_data(metafits_folder)
-    #count_broken_tiles(obsids_list, metafits_folder, include_flagged=False)
+    # count_broken_tiles_all_data(metafits_folder)
+    count_broken_tiles(obsids_list, metafits_folder, include_flagged=False)
     return
 
 
@@ -110,16 +110,12 @@ def count_broken_tiles(obsids_list, metafits_folder, include_flagged= False):
 
         dipole_statistics[counter, broken_dipoles + 1] = dipole_occurence
 
-
-
-
         hdu.close()
         counter += 1
 
     tile_count1_file.close()
     tile_count2_file.close()
-    print(dipole_statistics)
-    print(numpy.sum(dipole_statistics, axis =0)/len(obsids_array))
+
 
     numpy.savetxt("broken_tile_count_" + obsids_list, tile_statistics, fmt ='%i', header  = "obsid 1dipole_count 2dipole_count" )
     numpy.savetxt("broken_dipole_count_"+ obsids_list, numpy.sum(dipole_statistics, axis = 0)/len(obsids_array))
