@@ -30,8 +30,8 @@ year = obsid.decimalyear
 #pyplot.scatter(data[:, 0], data[:, 1])
 #pyplot.show()
 figure, axes = pyplot.subplots(1,1, figsize = (25,5))
-axes.plot(year, data[:, 1], label = "1 Dipole", s = 10, alpha = 0.3)
-axes.plot(year, data[:, 2], label = "2 Dipoles",s=10,   alpha = 0.3)
+axes.scatter(year, data[:, 1], label = "1 Dipole", s = 5, alpha = 0.3)
+axes.scatter(year, data[:, 2], label = "2 Dipoles",s=5,   alpha = 0.3)
 
 axes.set_xlabel("Year", fontsize = fontsize)
 axes.set_ylabel("Number of Tiles", fontsize = fontsize)
