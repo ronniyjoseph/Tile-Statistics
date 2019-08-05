@@ -1,13 +1,17 @@
 import os
 from astropy.io import fits
 import numpy
+import subprocess
 
-
-def main():
-    obsids_list = "test_list.txt"
+def main(download = True):
+    obsids_list = "Ultimate-EOR-obsids-2014-19-full.txt"
     metafits_folder = '/mnt/data/PPDs'
-    # count_broken_tiles_all_data(metafits_folder)
-    count_broken_tiles(obsids_list, metafits_folder, include_flagged=False)
+    local_folder = "/data/rjoseph/Beam_Perturbations/Dipole_Statistics/ppd_metafits_all_EoR/"
+    if download:
+        download_metafits_ppds(obsids_list, metafits_folder, local_folder)
+
+    #count_broken_tiles_all_data(metafits_folder)
+    #count_broken_tiles(obsids_list, metafits_folder, include_flagged=False)
     return
 
 
@@ -120,6 +124,30 @@ def count_broken_tiles(obsids_list, metafits_folder, include_flagged= False):
     numpy.savetxt("broken_tile_count_" + obsids_list, tile_statistics, fmt ='%i', header  = "obsid 1dipole_count 2dipole_count" )
     numpy.savetxt("broken_dipole_count_"+ obsids_list, numpy.sum(dipole_statistics, axis = 0)/len(obsids_array))
     return
+
+
+def download_metafits_ppds(obsids_list, metafits_folder, local_folder):
+    print("Downloading Files from", obsids_list)
+    obsids_array = numpy.loadtxt(obsids_list, ndmin = 1)
+
+    if len(obsids_array) > 1:
+        obsids_array = numpy.sort(obsids_array)
+
+    for obsid in obsids_array:
+        obsid_path = str(int(obsid))[:4]
+        obsid_metafits = metafits_folder + "/" + obsid_path + "/" + str(int(obsid)) + "_metafits_ppds.fits"
+
+        process = subprocess.Popen(["scp", obsid_metafits, "Danakat:" + local_folder])
+        process.communicate()
+    return
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     main()
