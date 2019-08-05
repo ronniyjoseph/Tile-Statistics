@@ -8,6 +8,13 @@ import datetime
 from astropy.time import Time
 import os
 
+
+################################
+
+# Exclude all MODE    = 'NO_CAPTURE' FILES!!!!!
+
+###############################
+
 stats_folder = "/data/rjoseph/Hybrid_Calibration/Dipole_Statistics"
 
 fontsize = 15
