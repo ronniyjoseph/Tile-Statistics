@@ -2,6 +2,8 @@ import os
 from astropy.io import fits
 import numpy
 import subprocess
+import multiprocessing
+from functools import partial
 
 def main(download = False):
     obsids_list = "Ultimate-EOR-obsids-2014-19-full.txt"
@@ -11,7 +13,7 @@ def main(download = False):
         download_metafits_ppds(obsids_list, metafits_folder, local_folder)
 
     #count_broken_tiles_all_data(metafits_folder)
-    count_broken_tiles_local(local_folder, include_flagged=False)
+    count_broken_tiles_local_parallel(local_folder, file_name="All_EoR_Stats.txt", include_flagged=False)
     return
 
 
@@ -59,7 +61,7 @@ def count_broken_tiles_all_data(metafits_folder, include_flagged= False):
                       header="obsid 1dipole_count 2dipole_count")
     return
 
-def count_broken_tiles_local(obsid_path, include_flagged= False):
+def count_broken_tiles_local(obsid_path, file_name = "Tile_Statistics.txt", include_flagged= False):
     print("Opening", obsid_path)
     obsid_list = os.listdir(obsid_path)
     tile_statistics = []
@@ -96,11 +98,61 @@ def count_broken_tiles_local(obsid_path, include_flagged= False):
 
             hdu.close()
             counter += 1
+    numpy.savetxt(file_name, numpy.array(tile_statistics), fmt='%i', header="obsid 1dipole_count 2dipole_count")
 
-    numpy.savetxt("broken_tile_count_" + str(ppd_folder) + ".txt", numpy.array(tile_statistics), fmt='%i',
-                  header="obsid 1dipole_count 2dipole_count")
     return
 
+def count_broken_tiles_local_parallel(obsid_path, file_name = "Stats.txt", include_flagged= False):
+    print("Opening", obsid_path)
+    obsid_list = sorted(os.listdir(obsid_path))
+
+
+    pool = multiprocessing.Pool(7)
+    tile_statistics = pool.map(partial(single_count, obsid_path, obsid_list, include_flagged), range(len(obsid_list)))
+
+    print("Counting tiles with 1 broken dipole and with 2 broken dipoles")
+
+    numpy.savetxt(file_name, numpy.array(tile_statistics), fmt='%i', header="obsid 1dipole_count 2dipole_count")
+    return
+
+
+def single_count(obsid_path, obsid_list, include_flagged, index):
+
+
+    filename_split = obsid_list[index].split("_")
+    obsid_metafits = obsid_path + "/" + obsid_list[index]
+
+    try:
+        hdu = fits.open(obsid_metafits)
+    except:
+        metadata = [int(filename_split[0]), -1, -1]
+    if not index % int(len(obsid_list) * 0.1):
+        print(f"{index / len(obsid_list) * 100}%")
+
+    # the relevant data is in the 1 hdu table
+    delay_table = hdu[1].data
+
+    if include_flagged:
+        non_flagged_tile_indices = None
+    else:
+        non_flagged_tile_indices = numpy.where(delay_table['Flag'] != 1)
+
+        broken_tile_indices, broken_dipole_indices = numpy.where(
+            delay_table['Delays'][non_flagged_tile_indices[0]] == 32)
+
+        broken_tile_numbers = delay_table['Antenna'][non_flagged_tile_indices][broken_tile_indices]
+        broken_tiles, tile_occurrence = numpy.unique(broken_tile_numbers, return_counts=True)
+
+        single_pol_indices = tile_occurrence[tile_occurrence == 1]
+        double_pol_indices = tile_occurrence[tile_occurrence == 2]
+
+        if hdu[0].header['MODE'] == 'NO_CAPTURE':
+            metadata = [int(filename_split[0]), numpy.nan, numpy.nan]
+        else:
+            metadata = [int(filename_split[0]), len(single_pol_indices), len(double_pol_indices)]
+
+        hdu.close()
+        return metadata
 
 def count_broken_tiles(obsids_list, metafits_folder, include_flagged= False):
     print("Opening", obsids_list)
